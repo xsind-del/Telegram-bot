@@ -1,0 +1,35 @@
+from aiogram import Bot, Dispatcher, types
+from aiogram.utils import executor
+import os
+
+TOKEN = os.getenv("7585290381:AAHTmpzex_e0zsEDl5LrhVJSflx4w_B-QKs")  # Берём токен из переменных среды
+ADMIN_GROUP_ID = int(os.getenv("-4611771483"))  # ID группы админов
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher(bot)
+
+@dp.message_handler()
+async def forward_to_admins(message: types.Message):
+    """Пересылает сообщения от пользователей в админ-группу"""
+    forwarded_message = await bot.send_message(
+        ADMIN_GROUP_ID,
+        f"Сообщение от [{message.from_user.full_name}](tg://user?id={message.from_user.id}):\n\n{message.text}",
+        parse_mode="Markdown"
+    )
+    
+@dp.message_handler(commands=["reply"])
+async def reply_to_user(message: types.Message):
+    """Отправляет ответ пользователю"""
+    args = message.text.split(maxsplit=2)
+    if len(args) < 3:
+        return await message.reply("Используйте: /reply user_id текст")
+    
+    user_id = int(args[1])
+    reply_text = args[2]
+
+    await bot.send_message(user_id, f"Ответ от админов:\n\n{reply_text}")
+    await message.reply("Ответ отправлен!")
+
+if __name__ == "__main__":
+    from aiogram import executor
+    executor.start_polling(dp, skip_updates=True)
